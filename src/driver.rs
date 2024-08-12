@@ -253,6 +253,15 @@ where
         }
     }
 
+    /// This allows direct access for sending pixel data directly to the display
+    ///
+    /// # Errors
+    ///
+    /// This method may return an error if there are communication issues with the display.
+    pub fn send_line(&mut self, colors: &[u16]) -> Result<(), DisplayError> {
+        self.interface.send_data(DataFormat::U16(colors))
+    }
+
     /// Flush the buffer by chuncks
     ///
     /// # Errors
