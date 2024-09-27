@@ -1,7 +1,11 @@
 //! Buffered Graphic Implementation
 
 use display_interface::{DisplayError, WriteOnlyDataCommand};
-use embedded_graphics_core::{pixelcolor::raw::RawU16, prelude::RawData};
+use embedded_graphics_core::{
+    pixelcolor::raw::RawU16,
+    prelude::{PointsIter, RawData},
+    primitives::Rectangle,
+};
 use embedded_hal::delay::DelayNs;
 
 use crate::{
@@ -237,5 +241,20 @@ where
                 self.set_pixel(pos.x as u32, pos.y as u32, color);
             });
         Ok(())
+    }
+
+    fn fill_contiguous<O>(&mut self, area: &Rectangle, colors: O) -> Result<(), Self::Error>
+    where
+        O: IntoIterator<Item = Self::Color>,
+    {
+        // Clamp area to drawable part of the display target
+        let drawable_area = area.intersection(&self.bounding_box());
+
+        self.draw_iter(
+            area.points()
+                .zip(colors)
+                .filter(|&(point, _color)| drawable_area.contains(point))
+                .map(|(pos, color)| Pixel(pos, color)),
+        )
     }
 }
